@@ -1,0 +1,11 @@
+cluster.name: es-cluster
+cluster.initial_master_nodes: 10.2.1.5
+node.name: \${HOSTNAME}
+node.master: true
+node.data: true
+path.logs: /var/log/elasticsearch
+path.data: /usr/share/elasticsearch/data
+bootstrap.memory_lock: true
+network.host: 0.0.0.0
+discovery.zen.minimum_master_nodes: 2
+discovery.zen.ping.unicast.hosts: ["elk-elastic1", "elk-elastic2", "elk-elastic3"]

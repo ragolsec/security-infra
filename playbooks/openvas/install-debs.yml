@@ -1,0 +1,71 @@
+---
+- hosts: scanners
+  become: yes
+  tasks:
+    - name: Install packages
+      apt:
+        pkg:
+          - acl
+          - aptitude
+          - bison
+          - clang-format
+          - cmake
+          - curl
+          - doxygen
+          - gcc
+          - gcc-mingw-w64
+          - gettext
+          - git
+          - gnutls-bin
+          - heimdal-dev
+          - libgcrypt20-dev
+          - libglib2.0-dev
+          - libgnutls28-dev
+          - libgpgme-dev
+          - libhiredis-dev
+          - libical-dev
+          - libksba-dev
+          - libldap2-dev
+          - libmicrohttpd-dev
+          - libpcap-dev
+          - libpopt-dev
+          - libradcli-dev
+          - libsnmp-dev
+          - libsqlite3-dev
+          - libssh-gcrypt-dev
+          - libxml2-dev
+          - pkg-config
+          - postgresql
+          - postgresql-contrib
+          - postgresql-server-dev-11
+          - python-polib
+          - python3-defusedxml
+          - python3-lxml
+          - python3-paramiko
+          - python3-setuptools
+          - python3-pip
+          - python-psycopg2
+          - redis
+          - rsync
+          - software-properties-common
+          - virtualenv
+          - xmltoman
+          - xsltproc
+          - yarn
+        state: latest
+        update_cache: yes
+    - name: Add Yarn APT public key
+      apt_key: 
+        url: https://dl.yarnpkg.com/debian/pubkey.gpg
+        state: present
+    - name: Add Yarn APT repository
+      apt_repository:
+        repo: deb https://dl.yarnpkg.com/debian/ stable main
+        state: present
+        filename: yarn.list
+    - name: Install Yarn
+      apt:
+        pkg:
+          - yarn
+        state: latest
+        update_cache: yes

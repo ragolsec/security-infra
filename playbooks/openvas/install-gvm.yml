@@ -1,0 +1,13 @@
+---
+- import_playbook: install-debs.yml
+- import_playbook: create-user.yml
+- import_playbook: compile-gvm-libs.yml
+- import_playbook: compile-openvas-smb.yml
+- import_playbook: compile-openvas.yml
+- import_playbook: configure-redis.yml
+- import_playbook: compile-gvmd.yml
+- import_playbook: configure-postgresql.yml
+- import_playbook: configure-gvmd.yml 
+- import_playbook: compile-gsa.yml
+- import_playbook: compile-ospd.yml
+- import_playbook: start-gvm.yml

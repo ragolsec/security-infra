@@ -1,0 +1,36 @@
+---
+- hosts: scanners
+  become: yes
+  vars_files:
+    - variables.yml
+  tasks:
+    - name: Create compile dirs
+      file:
+        path: /tmp/gvm
+        state: directory
+        mode: '0755'
+    - name: Download OpenVAS tar.gz
+      get_url:
+        url: https://github.com/greenbone/openvas/archive/v{{openvas_version}}.tar.gz
+        dest: /tmp/gvm/openvas.tar.gz
+    - name: Extract OpenVAS
+      unarchive:
+        src: /tmp/gvm/openvas.tar.gz
+        dest: /tmp/gvm
+        remote_src: yes
+    - name: Create build dir
+      file:
+        path: /tmp/gvm/openvas-{{openvas_version}}/build
+        state: directory
+    - name: Build OpenVAS
+      command: "{{ item }} chdir=/tmp/gvm/openvas-{{openvas_version}}/build"
+      with_items:
+        - cmake -DCMAKE_INSTALL_PREFIX=/opt/gvm ..
+        - make
+        - make doc
+      environment:
+        PKG_CONFIG_PATH: /opt/gvm/lib/pkgconfig:$PKG_CONFIG_PATH
+    - name: Install OpenVAS
+      make:
+        chdir: /tmp/gvm/openvas-{{openvas_version}}/build
+        target: install

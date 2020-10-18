@@ -1,0 +1,39 @@
+---
+
+- hosts: scanners
+  become: yes
+  vars_files: 
+    - variables.yml
+  tasks:
+    - name: Create compile dirs
+      file:
+        path: /tmp/gvm
+        state: directory
+        owner: "{{remote_username}}"
+        mode: '0755'
+    - name: Download GVM-libs tar.gz
+      get_url: 
+        url: https://github.com/greenbone/gvm-libs/archive/v{{gvm_libs_version}}.tar.gz
+        dest: /tmp/gvm/gvm-libs.tar.gz
+    - name: Extract GVM-libs
+      unarchive: 
+        src: /tmp/gvm/gvm-libs.tar.gz
+        dest: /tmp/gvm
+        remote_src: yes
+    - name: Create build dir
+      file:
+        path: /tmp/gvm/gvm-libs-{{gvm_libs_version}}/build
+        state: directory
+    - name: Build GVM-libs
+      command: "{{ item }} chdir=/tmp/gvm/gvm-libs-{{gvm_libs_version}}/build"
+      with_items:
+        - cmake -DCMAKE_INSTALL_PREFIX=/opt/gvm ..
+        - make
+        - make doc
+      environment: 
+        PKG_CONFIG_PATH: /opt/gvm/lib/pkgconfig:$PKG_CONFIG_PATH
+    - name: Install GVM-libs
+      make:
+        chdir: /tmp/gvm/gvm-libs-{{gvm_libs_version}}/build
+        target: install
+

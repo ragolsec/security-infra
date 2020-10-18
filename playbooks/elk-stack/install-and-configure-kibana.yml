@@ -1,0 +1,102 @@
+---
+- hosts: kibana
+  become: yes
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+    - name: Install curl
+      apt:
+        name: curl
+        state: latest
+    - name: Install java
+      apt:
+        name: default-jre
+        state: latest
+    - name: Install python-cryptography
+      apt:
+        name: python-cryptography
+        state: latest
+    - name: Add GPG key
+      command: 
+        cmd: apt-key adv --fetch-keys https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+    - name: Install apt-transport-https
+      apt:
+        name: apt-transport-https
+        state: latest
+    - name: Add Elastic repo
+      copy: 
+        src: ../../files/elastic-7.x.list
+        dest: /etc/apt/sources.list.d/elastic-7.x.list
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Update APT sources
+      command: 
+        cmd: apt update
+    - name: Install Kibana
+      apt:
+        name: kibana
+        state: latest
+    - name: Copy Kibana config
+      copy: 
+        src: ../../files/kibana_config.yml
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Restart Kibana
+      command: 
+        cmd: systemctl restart kibana
+    - name: Copy vimrc
+      copy: 
+        src: /etc/vim/vimrc
+        dest: /etc/vim/vimrc
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: latest
+    - name: Copy Reverse Proxy Config
+      copy: 
+        src: ../../files/nginx-kibana-reverse-proxy.conf
+        dest: /etc/nginx/sites-available/reverse-proxy-kibana.conf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Enable Nginx Reverse Proxy
+      file: 
+        src: /etc/nginx/sites-available/reverse-proxy-kibana.conf
+        dest: /etc/nginx/sites-enabled/reverse-proxy-kibana.conf
+        state: link
+    - name: Create Nginx Certificate dir
+      file:
+        path: /etc/nginx/certs
+        state: directory
+        mode: '0755'
+    - name: Generate an OpenSSL private key.
+      openssl_privatekey:
+        path: /etc/nginx/certs/cert.key
+    - name: Fix private key access rights
+      file:
+        path: /etc/nginx/cert.key
+        mode: u=r,g-rwx,o-rwx
+        state: touch
+    - name: Generate an OpenSSL CSR.
+      openssl_csr:
+        path: /etc/nginx/certs/cert.csr
+        privatekey_path: /etc/nginx/certs/cert.key
+        common_name: 'elk-kibana1'
+    - name: Generate a Self Signed OpenSSL certificate
+      openssl_certificate:
+        path: /etc/nginx/certs/cert.crt
+        privatekey_path: /etc/nginx/certs/cert.key
+        csr_path: /etc/nginx/certs/cert.csr
+        provider: selfsigned
+    - name: Restart Nginx
+      command: 
+        cmd: systemctl restart nginx
+        

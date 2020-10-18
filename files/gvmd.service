@@ -1,0 +1,24 @@
+[Unit]
+Description=Open Vulnerability Assessment System Manager Daemon
+Documentation=man:gvmd(8) https://www.greenbone.net
+Wants=postgresql.service ospd-openvas.service
+After=postgresql.service ospd-openvas.service
+
+[Service]
+Type=forking
+User=gvm
+Group=gvm
+PIDFile=/opt/gvm/var/run/gvmd.pid
+WorkingDirectory=/opt/gvm
+ExecStart=/opt/gvm/sbin/gvmd --osp-vt-update=/opt/gvm/var/run/ospd.sock
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=on-failure
+RestartSec=2min
+KillMode=process
+KillSignal=SIGINT
+GuessMainPID=no
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

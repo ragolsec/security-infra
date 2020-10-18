@@ -1,0 +1,87 @@
+---
+- hosts: scanners
+  become: yes
+  vars_files:
+    - variables.yml
+  tasks:
+    - name: Run ldconfig
+      command: ldconfig
+    - name: Copy redis.conf
+      copy:
+        src: /tmp/gvm/openvas-{{openvas_version}}/config/redis-openvas.conf
+        remote_src: yes
+        dest: /etc/redis/redis.conf
+        owner: redis
+        group: redis
+    - name: Change Redis pid-file location
+      replace:
+        path: /etc/redis/redis.conf
+        regexp: 'pidfile /run/redis-openvas/redis-server.pid'
+        replace: 'pidfile /run/redis/redis-server.pid'
+    - name: Change Redis unixsocket location
+      replace:
+        path: /etc/redis/redis.conf
+        regexp: 'unixsocket /run/redis-openvas/redis.sock'
+        replace: 'unixsocket /run/redis/redis.sock'
+    - name: Create /etc/openvas dirs
+      file:
+        path: /etc/openvas
+        state: directory
+        mode: '0755'
+    - name: Copy openvas.conf
+      copy:
+        src: ../../files/openvas.conf
+        dest: /etc/openvas/openvas.conf
+    - name: Run sysctl config changes (1)
+      command: sysctl -w net.core.somaxconn=1024
+    - name: Run sysctl config changes (2)
+      command: sysctl vm.overcommit_memory=1
+    - name: Update sysctl.conf (1)
+      sysctl:
+        name: net.core.somaxconn
+        value: "1024"
+    - name: Update sysctl.conf (2)
+      sysctl:
+        name: vm.overcommit_memory 
+        value: "1"
+    - name: Copy Systemd file needed for Redis
+      copy:
+        src: ../../files/disable_thp.service
+        dest: /etc/systemd/system/disable_thp.service
+        owner: root
+        group: root
+        mode: u+rwx,g-w,o-w
+    - name: Start Disable_THP
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: disable_thp
+        enabled: yes
+    - name: Restart Redis-server after config changes
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: redis-server
+        enabled: yes
+    - name: Copy sudoers
+      copy:
+        src: ../../files/sudoers
+        dest: /etc/sudoers
+    - name: Change plugin folder ACLs
+      file: 
+        path: /opt/gvm/var/lib/openvas/plugins/
+        owner: gvm
+        group: gvm
+    - name: Sync NVT data
+      become: yes
+      become_user: gvm
+      command: /opt/gvm/bin/greenbone-nvt-sync
+    - name: Reload modules
+      command: ldconfig
+    - name: Upload Plugins in Redis with OpenVAS
+      command: 
+        cmd: /opt/gvm/sbin/openvas -u
+
+
+
+

@@ -1,0 +1,77 @@
+---
+- hosts: elastic
+  become: yes
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+    - name: Install curl
+      apt:
+        name: curl
+        state: latest
+    - name: Install java
+      apt:
+        name: default-jre
+        state: latest
+    - name: Add GPG key
+      command: 
+        cmd: apt-key adv --fetch-keys https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+    - name: Install apt-transport-https
+      apt:
+        name: apt-transport-https
+        state: latest
+    - name: Add Elastic repo
+      copy: 
+        src: ../../files/elastic-7.x.list
+        dest: /etc/apt/sources.list.d/elastic-7.x.list
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Update APT sources
+      command: 
+        cmd: apt update
+    - name: Install Elasticsearch
+      apt:
+        name: elasticsearch
+        state: latest
+    - name: Copy Elasticsearch yml to nodes
+      copy:
+        src: ../../files/elasticsearch_conf.yml
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy Elasticsearch defaults
+      copy:
+        src: ../../files/elasticsearch_defaults
+        dest: /etc/default/elasticsearch
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy Elasticsearch limits
+      copy:
+        src: ../../files/elasticsearch_limits
+        dest: /etc/security/limits.conf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy Elasticsearch systemd-file
+      copy:
+        src: ../../files/elasticsearch.service
+        dest: /usr/lib/systemd/system/elasticsearch.service
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy vimrc
+      copy: 
+        src: /etc/vim/vimrc
+        dest: /etc/vim/vimrc
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Configure Elasticsearch
+      script: ../../scripts/configure-elasticsearch.sh
+        
+
+

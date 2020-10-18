@@ -1,0 +1,40 @@
+---
+- hosts: scanners
+  become: yes
+  vars_files:
+    - variables.yml
+  tasks:
+    - name: Create compile dirs
+      file:
+        path: /tmp/gvm
+        state: directory
+        mode: '0755'
+    - name: Download GSA tar.gz
+      get_url:
+        url: https://github.com/greenbone/gsa/archive/v{{gsa_version}}.tar.gz
+        dest: /tmp/gvm/gsa.tar.gz
+    - name: Extract GSA
+      unarchive:
+        src: /tmp/gvm/gsa.tar.gz
+        dest: /tmp/gvm
+        remote_src: yes
+    - name: Create build dir
+      file:
+        path: /tmp/gvm/gsa-{{gsa_version}}/build
+        state: directory
+    - name: Build GSA
+      command: "{{ item }} chdir=/tmp/gvm/gsa-{{gsa_version}}/build"
+      with_items:
+        - cmake -DCMAKE_INSTALL_PREFIX=/opt/gvm ..
+        - make
+        - make doc
+      environment:
+        PKG_CONFIG_PATH: /opt/gvm/lib/pkgconfig:$PKG_CONFIG_PATH
+    - name: Touch gsad.log
+      file:
+        path: /opt/gvm/var/log/gvm/gsad.log
+        state: touch
+    - name: Install GSA
+      make:
+        chdir: /tmp/gvm/gsa-{{gsa_version}}/build
+        target: install

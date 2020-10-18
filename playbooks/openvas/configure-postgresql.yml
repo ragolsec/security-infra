@@ -1,0 +1,39 @@
+---
+- hosts: scanners
+  become: yes
+  tasks:
+    - name: Create GVM user to PostgreSQL
+      become: yes
+      become_user: postgres
+      postgresql_user: 
+        name: gvm
+        state: present
+    - name: Create GVM database to PostgreSQL
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: gvmd
+        state: present
+        owner: gvm
+    - name: Create role dba to PostgreSQL
+      become: yes
+      become_user: postgres
+      postgresql_user: 
+        name: dba
+        role_attr_flags: SUPERUSER,NOINHERIT
+        state: present
+    - name: Grant role dba to user gvm
+      become: yes
+      become_user: postgres
+      postgresql_membership: 
+        group: dba
+        target_roles:
+          - gvm
+        state: present
+    - name: Create extension 'uuid-ossp'
+      become: yes
+      become_user: postgres
+      postgresql_ext: 
+        name: uuid-ossp
+        db: gvmd
+        state: present 

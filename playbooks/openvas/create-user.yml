@@ -1,0 +1,33 @@
+---
+- hosts: scanners
+  become: yes
+  tasks:
+    - name: Copy profile.d
+      copy:
+        src: ../../files/profile.d_gvm.sh
+        dest: /etc/profile.d/gvm.sh
+        mode: '0755'
+    - name: Copy ld.so-gvm.conf
+      copy:
+        src: ../../files/ld_gvm.conf
+        dest: /etc/ld.so.conf.d/gvm.conf
+    - name: Create GVM installation dir
+      file:
+        path: /opt/gvm
+        state: directory
+        mode: '0755'
+    - name: Add user 'gvm'
+      user:
+        name: gvm
+        groups: redis
+        password_lock: yes
+        home: /opt/gvm
+        create_home: false
+    - name:  GVM installation dir
+      file:
+        path: /opt/gvm
+        state: directory
+        mode: '0755'
+        owner: gvm
+        group: gvm
+

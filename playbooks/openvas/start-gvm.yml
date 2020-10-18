@@ -1,0 +1,46 @@
+---
+- hosts: scanners
+  become: yes
+  tasks:
+    - name: Fixing log files ACLs (1)
+      file: 
+        path: /opt/gvm/var/log/gvm/gsad.log
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Fixing log files ACLs (2)
+      file: 
+        path: /opt/gvm/var/log/gvm/gvmd.log
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Fixing log files ACLs (3)
+      file: 
+        path: /opt/gvm/var/log/gvm/openvas.log
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Fixing log files ACLs (4)
+      file: 
+        path: /opt/gvm/var/log/gvm/ospd-scanner.log
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Start GVMD
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: gvmd
+        enabled: yes
+    - name: Start GSAD
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: gsad
+        enabled: yes
+    - name: Start OSPD-OpenVAS
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: ospd-openvas
+        enabled: yes

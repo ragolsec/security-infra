@@ -1,0 +1,97 @@
+---
+- hosts: scanners
+  become: yes
+  tasks:
+    - name: Fix gvmd.log ACL
+      file:
+        path: /opt/gvm/var/log/gvm/gvmd.log
+        state: touch
+        owner: gvm
+        group: gvm
+        mode: u+rw
+    - name: Creating gvm-checking with proper ACL
+      file: 
+        path: /opt/gvm/var/run/gvm-checking
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Creating gvm-migrating with proper ACL
+      file: 
+        path: /opt/gvm/var/run/gvm-migrating
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Creating gvm-helping with proper ACL
+      file: 
+        path: /opt/gvm/var/run/gvm-helping
+        state: touch
+        owner: gvm
+        group: gvm
+    - name: Changing run directory ACL
+      file: 
+        path: /opt/gvm/var/run/
+        state: directory
+        owner: gvm
+        group: gvm
+    - name: Creating GPGME directory
+      file: 
+        path: /opt/gvm/var/lib/gvm/gvmd/gnupg
+        state: directory
+        owner: gvm
+        group: gvm
+    - name: Creating cert-data directory
+      file: 
+        path: /opt/gvm/var/lib/gvm/cert-data
+        state: directory
+        owner: gvm
+        group: gvm
+    - name: Fix GVM certificates
+      command:
+        cmd: /opt/gvm/bin/gvm-manage-certs -a -f -q
+    - name: Create GVMD user
+      become_user: gvm
+      command: /opt/gvm/sbin/gvmd --create-user=admin --password=admina
+    - name: Fix certdata-sync script
+      replace:
+        path: /opt/gvm/sbin/greenbone-certdata-sync
+        regexp: '^greenbone-feed-sync'
+        replace: '/opt/gvm/sbin/greenbone-feed-sync'
+    - name: Fix scapdata-sync script
+      replace:
+        path: /opt/gvm/sbin/greenbone-scapdata-sync
+        regexp: '^greenbone-feed-sync'
+        replace: '/opt/gvm/sbin/greenbone-feed-sync'
+    - name: Sync certdata
+      command:
+        cmd: /opt/gvm/sbin/greenbone-certdata-sync
+    - name: Sync Scapdata
+      command:
+        cmd: /opt/gvm/sbin/greenbone-scapdata-sync
+    - name: Copy GVMD Service
+      copy: 
+        src: ../../files/gvmd.service
+        dest: /etc/systemd/system/gvmd.service
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy GSAD Service
+      copy: 
+        src: ../../files/gsad.service
+        dest: /etc/systemd/system/gsad.service
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Copy OSPD-OpenvAS Service
+      copy: 
+        src: ../../files/ospd-openvas.service
+        dest: /etc/systemd/system/ospd-openvas.service
+        owner: root
+        group: root
+        mode: '0644'
+
+
+
+
+
+
+

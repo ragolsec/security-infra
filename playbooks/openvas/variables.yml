@@ -1,0 +1,19 @@
+---
+# The latest version numbers for these packages can be found from the following URLs
+# https://github.com/greenbone/gsa/releases
+# https://github.com/greenbone/gvm-libs/releases
+# https://github.com/greenbone/gvmd/releases
+# https://github.com/greenbone/openvas-smb/releases
+# https://github.com/greenbone/openvas/releases
+# https://github.com/greenbone/ospd/releases
+# https://github.com/greenbone/ospd-openvas/releases
+gsa_version: "20.8.0"
+gvm_libs_version: "20.8.0" 
+gvmd_version: "20.8.0"
+openvas_smb_version: "1.0.5"
+openvas_version: "20.8.0"
+ospd_version: "20.8.0"
+ospd_openvas_version: "20.8.0"
+
+# username with sudo rights at the remote side
+remote_username: "account"

@@ -1,0 +1,45 @@
+---
+- hosts: scanners
+  become: yes
+  vars_files:
+    - variables.yml
+  tasks:
+    - name: Create compile dirs
+      file:
+        path: /tmp/gvm
+        state: directory
+        mode: '0755'
+    - name: Download GVMD tar.gz
+      get_url:
+        url: https://github.com/greenbone/gvmd/archive/v{{gvmd_version}}.tar.gz
+        dest: /tmp/gvm/gvmd.tar.gz
+    - name: Extract GVMD
+      unarchive:
+        src: /tmp/gvm/gvmd.tar.gz
+        dest: /tmp/gvm
+        remote_src: yes
+    - name: Create build dir
+      file:
+        path: /tmp/gvm/gvmd-{{gvmd_version}}/build
+        state: directory
+    - name: Download GVM-portnames fix
+      get_url:
+        url: https://raw.githubusercontent.com/apilynx/gvmd/e7f94bbe0879acb93f87bd1563148fc1d04a27fd/tools/gvm-portnames-update.in 
+        dest: /tmp/gvm/gvmd-{{gvmd_version}}/tools/gvm-portnames-update.in
+    - name: Use Postgres as DB
+      replace:
+        path: /tmp/gvm/gvmd-{{gvmd_version}}/tools/gvm-portnames-update.in
+        regexp: POSTGRES=0
+        replace: POSTGRES=1
+    - name: Build GVMD
+      command: "{{ item }} chdir=/tmp/gvm/gvmd-{{gvmd_version}}/build"
+      with_items:
+        - cmake -DCMAKE_INSTALL_PREFIX=/opt/gvm ..
+        - make
+        - make doc
+      environment:
+        PKG_CONFIG_PATH: /opt/gvm/lib/pkgconfig:$PKG_CONFIG_PATH
+    - name: Install GVMD
+      make:
+        chdir: /tmp/gvm/gvmd-{{gvmd_version}}/build
+        target: install
